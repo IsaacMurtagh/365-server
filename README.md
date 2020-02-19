@@ -1,4 +1,4 @@
-# SENG365 2020 Assignment 1.0
+# SENG365 2020 Assignment 1
 
 ## Overview of the continuous deployment process
 
