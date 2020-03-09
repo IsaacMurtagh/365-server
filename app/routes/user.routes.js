@@ -9,4 +9,8 @@ module.exports = function (app) {
 
     app.route(app.rootUrl + '/users/logout')
         .post(users.logout);
+
+    app.route(app.rootUrl + '/users/:id')
+        .get(users.getUser)
+        .patch(users.updateUser)
 }
