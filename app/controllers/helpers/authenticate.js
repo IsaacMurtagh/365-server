@@ -10,7 +10,7 @@ exports.authenticateUser = async function (userId, session_token) {
     // Check that the login session is associated to the requested user
     const user_profile = user_results[0];
     if (user_profile.user_id != userId) {
-        throw new SyntaxError();
+        return null
     }
 
     return user_profile;
@@ -20,6 +20,15 @@ exports.authenticateUser = async function (userId, session_token) {
 exports.validEmail = function (email) {
 
     if (!email.match(/[\w\.]+@[\w\.]+/g)) {
+        return false;
+    }
+
+    return true;
+}
+
+exports.uniqueEmail = async function (email) {
+    const user_results = await User.getUserByEmail(email);
+    if (user_results.length > 0) {
         return false;
     }
 

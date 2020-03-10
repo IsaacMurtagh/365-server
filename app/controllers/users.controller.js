@@ -4,22 +4,32 @@ const crypto = require('crypto');
 
 exports.createUser = async function (req, res) {
     try {
+        // Check not null
+        if (req.body.email == null || req.body.password == null || req.body.name == null) {
+            throw new SyntaxError();
+        }
+
         // Check if valid email syntax
         if (!(Auth.validEmail(req.body.email))) {
             throw new SyntaxError();
         }
 
         // Check if user exists
-        const user_results = await User.getUserByEmail(req.body.email);
-        if (user_results.length > 0) {
+        if (!(await Auth.uniqueEmail(req.body.email))) {
             throw new SyntaxError();
         }
 
-        let user_data = [req.body.name, req.body.email, req.body.password, req.body.city, req.body.country]
+        // Check password not empty
+        if (req.body.password.length < 1) {
+            throw new SyntaxError();
+        }
 
-        const result = await User.createUser(user_data);
+        const values = [req.body.name, req.body.email, req.body.password, req.body.city, req.body.country];
+
+        const result = await User.createUser(values);
         let response = {"userId": result.insertId};
 
+        console.log("THIS HAPPENS")
         res.statusMessage = "OK";
         res.status(201).send(response);
 
@@ -112,14 +122,25 @@ exports.getUser = async function (req, res) {
         const session_token = req.header('X-Authorization');
 
         // Get the User profile that is associated to the session token
-        const user_profile = await Auth.authenticateUser(req.params.id, session_token);
+        let user_profile = await Auth.authenticateUser(req.params.id, session_token);
+        let response;
 
-        let response = {
-            "name": user_profile.name,
-            "city": user_profile.city,
-            "country": user_profile.country,
-            "email": user_profile.email
+        if (user_profile == null) {
+            user_profile = await User.getUserById(req.params.id);
+            response = {
+                "name": user_profile.name,
+                "city": user_profile.city,
+                "country": user_profile.country,
+            }
+        } else {
+            response = {
+                "name": user_profile.name,
+                "city": user_profile.city,
+                "country": user_profile.country,
+                "email": user_profile.email
+            }
         }
+
 
         res.statusMessage = "OK";
         res.status(200).send(response);
@@ -142,10 +163,8 @@ exports.updateUser = async function (req, res) {
         const session_token = req.header('X-Authorization');
 
         // Get the User profile that is associated to the session token\
-        let user_profile;
-        try {
-            user_profile = await Auth.authenticateUser(req.params.id, session_token);
-        } catch (e) {
+        user_profile = await Auth.authenticateUser(req.params.id, session_token);
+        if (user_profile == null) {
             throw new ReferenceError()
         }
 
@@ -155,8 +174,7 @@ exports.updateUser = async function (req, res) {
         }
 
         // Check that the email is not in use
-        const user_results = await User.getUserByEmail(req.body.email);
-        if (user_results.length > 0) {
+        if (!(await Auth.uniqueEmail(req.body.email))) {
             throw new SyntaxError();
         }
 

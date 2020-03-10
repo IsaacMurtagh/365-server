@@ -8,7 +8,6 @@ module.exports.createUser = async function (values) {
                 'VALUES (?, ?, ?, ?, ?)';
 
     const [rows, fields] = await connection.query(sql, values);
-    console.log(rows);
     return rows;
 }
 
@@ -46,5 +45,14 @@ module.exports.updateUserById = async function (user_id, [values]) {
     const sql = 'UPDATE User SET name = ?, email = ?, password = ?, city = ?, country = ? WHERE user_id = ?';
 
     const [rows, fields] = await connection.query(sql, values + [user_id]);
+    return rows;
+}
+
+module.exports.getUserById = async function (user_id) {
+    const connection = await db.getPool().getConnection();
+
+    const sql = 'SELECT * FROM User WHERE user_id = ?';
+
+    const [rows, fields] = await connection.query(sql, [user_id]);
     return rows;
 }
