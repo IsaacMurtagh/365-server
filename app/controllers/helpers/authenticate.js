@@ -1,20 +1,9 @@
 const User = require('../../models/user.model');
 
-exports.authenticateUser = async function (userId, session_token) {
-
+exports.authenticateUser = async function (session_token) {
+    /* Returns the first user associated with that token or null if not a valid token*/
     const user_results = await User.getUserByToken(session_token);
-    if (user_results.length != 1) {
-        throw new SyntaxError();
-    }
-
-    // Check that the login session is associated to the requested user
-    const user_profile = user_results[0];
-    if (user_profile.user_id != userId) {
-        return null
-    }
-
-    return user_profile;
-
+    return user_results[0];
 }
 
 exports.validEmail = function (email) {

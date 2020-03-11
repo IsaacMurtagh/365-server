@@ -117,35 +117,173 @@ exports.logout = async function (req, res) {
 }
 
 
-exports.getUser = async function (req, res) {
+// exports.getUser = async function (req, res) {
+//     try {
+//         const session_token = req.header('X-Authorization');
+//
+//         // Get the User profile that is associated to the session token
+//         let user_profile = await Auth.authenticateUser(req.params.id, session_token);
+//         let response;
+//
+//         if (user_profile == null) {
+//             user_profile = await User.getUserById(req.params.id);
+//             response = {
+//                 "name": user_profile.name,
+//                 "city": user_profile.city,
+//                 "country": user_profile.country,
+//             }
+//         } else {
+//             response = {
+//                 "name": user_profile.name,
+//                 "city": user_profile.city,
+//                 "country": user_profile.country,
+//                 "email": user_profile.email
+//             }
+//         }
+//
+//
+//         res.statusMessage = "OK";
+//         res.status(200).send(response);
+//     } catch (err) {
+//         if (err instanceof SyntaxError) {
+//             res.statusMessage = "Not Found";
+//             res.status(404).send();
+//         } else {
+//             console.log(err);
+//             res.statusMessage = "Internal Server Error";
+//             res.status(500).send();
+//         }
+//
+//     }
+// }
+
+
+exports.updateUser = async function (req, res) {
+    let errorReason = "";
     try {
-        const session_token = req.header('X-Authorization');
+        let updated_details = {
+            "name": req.body.name,
+            "email": req.body.email,
+            "password": req.body.password,
+            "city": req.body.city,
+            "country": req.body.country
+        }
 
-        // Get the User profile that is associated to the session token
-        let user_profile = await Auth.authenticateUser(req.params.id, session_token);
-        let response;
+        let user_profile = await Auth.authenticateUser(req.header('X-Authorization'));
+        if (user_profile == null) { // Not logged in
+            errorReason = "Unauthorized";
+            throw new Error();
+        }
 
-        if (user_profile == null) {
-            user_profile = await User.getUserById(req.params.id);
-            response = {
-                "name": user_profile.name,
-                "city": user_profile.city,
-                "country": user_profile.country,
+        if  (user_profile.user_id != req.params.id) {// Not own profile
+            errorReason = "Forbidden";
+            throw new Error();
+        }
+        // Consistency passwords
+        if (req.body.password == null) {
+            errorReason = "Bad Request";
+            throw new Error();
+        } else if (req.body.password.length < 1) {
+            errorReason = "Bad Request";
+            throw new Error();
+        }
+        if (req.body.password != user_profile.password) { //changing password
+            // Check if current password is same as old password
+            if (req.body.currentPassword != user_profile.password) {
+                errorReason = "Unauthorized";
+                throw new Error();
             }
+        }
+
+        // email
+        if (req.body.email == null) { // Email not changing
+            updated_details['email'] = user_profile.email;
+        } else if (!Auth.validEmail(req.body.email)) { // invalid new email
+            errorReason = "Bad Request";
+            throw new Error();
+        }else if (!(await Auth.uniqueEmail(req.body.email))) {
+            errorReason = "Bad Request";
+            throw new Error();
+        }
+
+        //name
+        if (req.body.name == null) {
+            updated_details['name'] = user_profile.name;
+        }
+
+        if (req.body.city == null) {
+            updated_details['city'] = user_profile.city;
+        }
+
+        if (req.body.country == null) {
+            updated_details['country'] = user_profile.country;
+        }
+
+        let values = []
+        for (const [key, value] of Object.entries(updated_details)) {
+            values.push(value);
+        }
+
+        await User.updateUserById(user_profile.user_id, values);
+
+        res.statusMessage = "OK";
+        res.status(200).send();
+    } catch (err) {
+        if (errorReason == "Unauthorized") {
+            res.statusMessage = errorReason;
+            res.status(401).send();
+        } else if (errorReason == "Bad Request") {
+            res.statusMessage = errorReason;
+            res.status(400).send();
+        } else if (errorReason == "Forbidden") {
+            res.statusMessage = errorReason;
+            res.status(403).send();
         } else {
-            response = {
+            console.log(err);
+            res.statusMessage = "Internal Server Error";
+            res.status(500).send();
+        }
+
+    }
+}
+
+exports.getUser = async function (req, res) {
+    let errorReason = "";
+    try {
+        let result;
+        let ownProfile = false;
+        let user_profile = await Auth.authenticateUser(req.header('X-Authorization'));
+
+        if (user_profile != null) { // They are logged in
+            if (user_profile.user_id == req.params.id) { // Requested own profile
+                ownProfile = true;
+                result = {
+                    "name": user_profile.name,
+                    "city": user_profile.city,
+                    "country": user_profile.country,
+                    "email": user_profile.email
+                }
+            }
+        }
+        if (!ownProfile) { // Requesting another user
+            user_profile = (await User.getUserById(req.params.id))[0]
+            if (user_profile == null) { // User does not exist
+                errorReason = "Not Found";
+                throw new Error();
+            }
+
+            result = {
                 "name": user_profile.name,
                 "city": user_profile.city,
                 "country": user_profile.country,
-                "email": user_profile.email
             }
         }
 
 
         res.statusMessage = "OK";
-        res.status(200).send(response);
+        res.status(200).send(result);
     } catch (err) {
-        if (err instanceof SyntaxError) {
+        if (errorReason == "Not Found") {
             res.statusMessage = "Not Found";
             res.status(404).send();
         } else {
@@ -156,60 +294,3 @@ exports.getUser = async function (req, res) {
 
     }
 }
-
-
-exports.updateUser = async function (req, res) {
-    try {
-        const session_token = req.header('X-Authorization');
-
-        // Get the User profile that is associated to the session token\
-        user_profile = await Auth.authenticateUser(req.params.id, session_token);
-        if (user_profile == null) {
-            throw new ReferenceError()
-        }
-
-        // Check valid email type
-        if (!(Auth.validEmail(req.body.email))) {
-            throw new SyntaxError();
-        }
-
-        // Check that the email is not in use
-        if (!(await Auth.uniqueEmail(req.body.email))) {
-            throw new SyntaxError();
-        }
-
-        // Check password is being changed
-        if (user_profile.password != req.body.password) {
-            if (req.params.password.length < 1) { // check valid new password
-                throw new SyntaxError();
-            }
-
-            if (user_profile.password != req.body.currentPassword) { // Authenticate current password
-                throw new EvalError();
-            }
-        }
-
-        updated_details = [req.body.name, req.body.email.req.body.password, req.body.city, req.body.country];
-        await User.updateUserById(user_profile.user_id, updated_details);
-
-        res.statusMessage = "OK";
-        res.status(200).send();
-    } catch (err) {
-        if (err instanceof SyntaxError) {
-            res.statusMessage = "Bad Request";
-            res.status(400).send();
-        } else if (err instanceof ReferenceError) {
-            res.statusMessage = "Forbidden";
-            res.status(403).send();
-        } else if (err instanceof EvalError) {
-            res.statusMessage = "Unauthorized";
-            res.status(401).send();
-        } else {
-            console.log(err);
-            res.statusMessage = "Internal Server Error";
-            res.status(500).send();
-        }
-
-    }
-}
-

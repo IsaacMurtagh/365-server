@@ -33,18 +33,20 @@ module.exports.storeTokenById = async function (userId, token) {
 module.exports.getUserByToken = async function (token) {
     const connection = await db.getPool().getConnection();
 
-    const sql = 'SELECT * FROM User WHERE auth_token = ?';
+    const sql = "SELECT * FROM User WHERE auth_token = ?";
 
     const [rows, fields] = await connection.query(sql, [token]);
     return rows;
 }
 
-module.exports.updateUserById = async function (user_id, [values]) {
+module.exports.updateUserById = async function (user_id, values) {
     const connection = await db.getPool().getConnection();
+    values.push(user_id)
 
-    const sql = 'UPDATE User SET name = ?, email = ?, password = ?, city = ?, country = ? WHERE user_id = ?';
 
-    const [rows, fields] = await connection.query(sql, values + [user_id]);
+    const sql = "UPDATE User SET name = ?, email = ?, password = ?, city = ?, country = ? WHERE user_id = ?";
+
+    const [rows, fields] = await connection.query(sql, values);
     return rows;
 }
 
