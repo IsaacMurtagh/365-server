@@ -1,4 +1,5 @@
 const User = require('../../models/user.model');
+const bcrypt = require('bcrypt');
 
 exports.authenticateUser = async function (session_token) {
     /* Returns the first user associated with that token or null if not a valid token*/
@@ -22,4 +23,12 @@ exports.uniqueEmail = async function (email) {
     }
 
     return true;
+}
+
+exports.hashedPassword = function (password) {
+    return bcrypt.hashSync(password, 10);
+}
+
+exports.comparePasswords = function (clear_password, hashed_password) {
+    return bcrypt.compareSync(clear_password, hashed_password);
 }

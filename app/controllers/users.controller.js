@@ -24,13 +24,18 @@ exports.createUser = async function (req, res) {
             throw new SyntaxError();
         }
 
-        const values = [req.body.name, req.body.email, req.body.password, req.body.city, req.body.country];
+        const values = [
+            req.body.name,
+            req.body.email,
+            Auth.hashedPassword(req.body.password),
+            req.body.city,
+            req.body.country
+        ];
 
         const result = await User.createUser(values);
         let response = {"userId": result.insertId};
 
-        console.log("THIS HAPPENS")
-        res.statusMessage = "OK";
+        res.statusMessage = "Created";
         res.status(201).send(response);
 
     } catch (err) {
@@ -58,7 +63,8 @@ exports.login = async function (req, res) {
         }
 
         // Check that the password is correct
-        if (!(user_profile.password == req.body.password)) {
+        if (!Auth.comparePasswords(req.body.password, user_profile.password)) {
+            console.log('fails')
             throw new SyntaxError();
         }
 
@@ -117,47 +123,6 @@ exports.logout = async function (req, res) {
 }
 
 
-// exports.getUser = async function (req, res) {
-//     try {
-//         const session_token = req.header('X-Authorization');
-//
-//         // Get the User profile that is associated to the session token
-//         let user_profile = await Auth.authenticateUser(req.params.id, session_token);
-//         let response;
-//
-//         if (user_profile == null) {
-//             user_profile = await User.getUserById(req.params.id);
-//             response = {
-//                 "name": user_profile.name,
-//                 "city": user_profile.city,
-//                 "country": user_profile.country,
-//             }
-//         } else {
-//             response = {
-//                 "name": user_profile.name,
-//                 "city": user_profile.city,
-//                 "country": user_profile.country,
-//                 "email": user_profile.email
-//             }
-//         }
-//
-//
-//         res.statusMessage = "OK";
-//         res.status(200).send(response);
-//     } catch (err) {
-//         if (err instanceof SyntaxError) {
-//             res.statusMessage = "Not Found";
-//             res.status(404).send();
-//         } else {
-//             console.log(err);
-//             res.statusMessage = "Internal Server Error";
-//             res.status(500).send();
-//         }
-//
-//     }
-// }
-
-
 exports.updateUser = async function (req, res) {
     let errorReason = "";
     try {
@@ -187,9 +152,9 @@ exports.updateUser = async function (req, res) {
             errorReason = "Bad Request";
             throw new Error();
         }
-        if (req.body.password != user_profile.password) { //changing password
+        if (!Auth.comparePasswords(req.body.password, user_profile.password)) { //changing password
             // Check if current password is same as old password
-            if (req.body.currentPassword != user_profile.password) {
+            if (!Auth.comparePasswords(req.body.currentPassword, user_profile.password)) {
                 errorReason = "Unauthorized";
                 throw new Error();
             }
@@ -278,7 +243,6 @@ exports.getUser = async function (req, res) {
                 "country": user_profile.country,
             }
         }
-
 
         res.statusMessage = "OK";
         res.status(200).send(result);

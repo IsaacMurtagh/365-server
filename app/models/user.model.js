@@ -8,6 +8,7 @@ module.exports.createUser = async function (values) {
                 'VALUES (?, ?, ?, ?, ?)';
 
     const [rows, fields] = await connection.query(sql, values);
+    await connection.release();
     return rows;
 }
 
@@ -18,6 +19,7 @@ module.exports.getUserByEmail = async function (email) {
     const sql = 'SELECT * FROM User WHERE email = ?';
 
     const [rows, fields] = await connection.query(sql, [email]);
+    await connection.release();
     return rows;
 }
 
@@ -27,6 +29,7 @@ module.exports.storeTokenById = async function (userId, token) {
     const sql = 'UPDATE User SET auth_token = ? WHERE user_id = ?';
 
     const [rows, fields] = await connection.query(sql, [token, userId]);
+    await connection.release();
     return rows;
 }
 
@@ -36,6 +39,7 @@ module.exports.getUserByToken = async function (token) {
     const sql = "SELECT * FROM User WHERE auth_token = ?";
 
     const [rows, fields] = await connection.query(sql, [token]);
+    await connection.release();
     return rows;
 }
 
@@ -47,6 +51,7 @@ module.exports.updateUserById = async function (user_id, values) {
     const sql = "UPDATE User SET name = ?, email = ?, password = ?, city = ?, country = ? WHERE user_id = ?";
 
     const [rows, fields] = await connection.query(sql, values);
+    await connection.release();
     return rows;
 }
 
@@ -56,5 +61,6 @@ module.exports.getUserById = async function (user_id) {
     const sql = 'SELECT * FROM User WHERE user_id = ?';
 
     const [rows, fields] = await connection.query(sql, [user_id]);
+    await connection.release();
     return rows;
 }
