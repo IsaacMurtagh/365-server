@@ -1,10 +1,21 @@
 const db = require('../../config/db');
 
-module.exports.getPeititons = async function (order_conditon) {
+module.exports.getPeititons = async function (query_params) {
 
-    const connection = await db.getPool().getConnection();
+    let q = 1;
+    if (query_params.q != null) {
+        q = "title = ?"
+    }
+    let sortBy;
+    if (query_params.sortBy == "ALPHABETICAL_ASC") {
+        sortBy = "ORDER BY title ASC"
+    } else if (query_params.sortBy == "ALPHABETICAL_DESC") {
+        sortBy = "ORDER BY title DESC"
+    } else if (query_params == "SIGNATURES_ASC") {
+        sortBy = "ORDER BY title DESC"
+    }
 
-    switch (order_conditon){
+    switch (query_params.sortBy){
         case "ALPHABETICAL_ASC":
             console.log(order_conditon);
             break;

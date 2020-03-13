@@ -4,7 +4,11 @@ const Auth = require('./helpers/authenticate');
 exports.getPetitions = async function (req, res) {
     var errorReason = "";
     try {
-        await Petition.getPeititons("ALPHABETICAL_ASC");
+        console.log(req.query);
+        const q = req.query;
+
+        res.statusMessage = "OK";
+        res.status(200).send();
     } catch (e) {
         
     }

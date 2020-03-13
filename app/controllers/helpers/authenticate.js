@@ -1,5 +1,5 @@
 const User = require('../../models/user.model');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt-nodejs');
 
 exports.authenticateUser = async function (session_token) {
     /* Returns the first user associated with that token or null if not a valid token*/
@@ -26,7 +26,7 @@ exports.uniqueEmail = async function (email) {
 }
 
 exports.hashedPassword = function (password) {
-    return bcrypt.hashSync(password, 10);
+    return bcrypt.hashSync(password);
 }
 
 exports.comparePasswords = function (clear_password, hashed_password) {
