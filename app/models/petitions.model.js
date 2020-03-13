@@ -4,7 +4,7 @@ exports.getPeititons = async function (qp) {
     const connection = await db.getPool().getConnection();
     let values = [];
 
-    let query = "SELECT petition_id, title, Category.name, User.name, COUNT(petition_id) AS signatureCount " +
+    let query = "SELECT petition_id AS petitionId, title, Category.name AS category, User.name AS authorName, COUNT(petition_id) AS signatureCount " +
         "FROM Petition NATURAL JOIN Signature " +
         "JOIN User on Petition.author_id = User.user_id " +
         "JOIN Category on Category.category_id = Petition.petition_id ";
@@ -16,19 +16,19 @@ exports.getPeititons = async function (qp) {
         if (qp.q != null) {
             if (needAnd) {where+= 'AND '};
             where += `title LIKE ? `;
-            values.push(`'%${qp.q}%'`);
+            values.push(`%${qp.q}%`);
             needAnd = true;
         }
-        if (qp.categoryId != null) {
+        if (qp.categoryId != null && Number(qp.categoryId) != NaN) {
             if (needAnd) {where+= 'AND '};
-            where += `Category.category_id = ? `;
-            values.push(qp.categoryId);
+            where += `Petition.category_id = ? `;
+            values.push(Number(qp.categoryId));
             needAnd = true;
         }
-        if (qp.authorId != null) {
+        if (qp.authorId != null && Number(qp.authorId) != NaN) {
             if (needAnd) {where+= 'AND '};
             where += `Petition.author_id = ? `;
-            values.push(qp.authorId);
+            values.push(parseInt(qp.authorId));
         }
     }
     query += where;
@@ -40,14 +40,11 @@ exports.getPeititons = async function (qp) {
     } else if (qp.sortBy == "ALPHABETICAL_DESC") {
         sortBy = "ORDER BY Category.name DESC";
     } else if (qp.sortBy == "SIGNATURES_ASC") {
-        sortBy = "ORDER BY Category.name DESC";
+        sortBy = "ORDER BY signatureCount ASC";
     } else {
-        sortBy = "ORDER BY Category.name DESC";
+        sortBy = "ORDER BY signatureCount DESC";
     }
     query += sortBy;
-
-    console.log(query);
-
 
     const [rows, fields] = await connection.query(query, values);
     await connection.release();
