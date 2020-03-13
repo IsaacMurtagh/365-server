@@ -1,37 +1,55 @@
 const db = require('../../config/db');
 
-module.exports.getPeititons = async function (query_params) {
+exports.getPeititons = async function (qp) {
+    const connection = await db.getPool().getConnection();
+    let values = [];
 
-    let q = 1;
-    if (query_params.q != null) {
-        q = "title = ?"
-    }
-    let sortBy;
-    if (query_params.sortBy == "ALPHABETICAL_ASC") {
-        sortBy = "ORDER BY title ASC"
-    } else if (query_params.sortBy == "ALPHABETICAL_DESC") {
-        sortBy = "ORDER BY title DESC"
-    } else if (query_params == "SIGNATURES_ASC") {
-        sortBy = "ORDER BY title DESC"
-    }
+    let query = "SELECT petition_id, title, Category.name, User.name, COUNT(petition_id) AS signatureCount " +
+        "FROM Petition NATURAL JOIN Signature " +
+        "JOIN User on Petition.author_id = User.user_id " +
+        "JOIN Category on Category.category_id = Petition.petition_id ";
 
-    switch (query_params.sortBy){
-        case "ALPHABETICAL_ASC":
-            console.log(order_conditon);
-            break;
-        case "ALPHABETICAL_DESC":
-            console.log(order_conditon);
-            break;
-        case "SIGNATURES_ASC":
-            console.log(order_conditon);
-            break;
-        default:
-            console.log(order_conditon);
-            break;
+    let where = "";
+    if (qp.q != null || qp.categoryId != null || qp.authorId != null) {
+        where = "WHERE ";
+        let needAnd = false;
+        if (qp.q != null) {
+            if (needAnd) {where+= 'AND '};
+            where += `title LIKE ? `;
+            values.push(`'%${qp.q}%'`);
+            needAnd = true;
+        }
+        if (qp.categoryId != null) {
+            if (needAnd) {where+= 'AND '};
+            where += `Category.category_id = ? `;
+            values.push(qp.categoryId);
+            needAnd = true;
+        }
+        if (qp.authorId != null) {
+            if (needAnd) {where+= 'AND '};
+            where += `Petition.author_id = ? `;
+            values.push(qp.authorId);
+        }
     }
-    // const sql = 'INSERT INTO User (name, email, password, city, country) ' +
-    //     'VALUES (?, ?, ?, ?, ?)';
-    //
-    // const [rows, fields] = await connection.query(sql, values);
-    return true;
+    query += where;
+    query += "GROUP BY petition_id ";
+
+    let sortBy = "";
+    if (qp.sortBy == "ALPHABETICAL_ASC") {
+        sortBy = "ORDER BY Category.name ASC";
+    } else if (qp.sortBy == "ALPHABETICAL_DESC") {
+        sortBy = "ORDER BY Category.name DESC";
+    } else if (qp.sortBy == "SIGNATURES_ASC") {
+        sortBy = "ORDER BY Category.name DESC";
+    } else {
+        sortBy = "ORDER BY Category.name DESC";
+    }
+    query += sortBy;
+
+    console.log(query);
+
+
+    const [rows, fields] = await connection.query(query, values);
+    await connection.release();
+    return rows;
 }
