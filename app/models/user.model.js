@@ -45,8 +45,7 @@ module.exports.getUserByToken = async function (token) {
 
 module.exports.updateUserById = async function (user_id, values) {
     const connection = await db.getPool().getConnection();
-    values.push(user_id)
-
+    values.push(user_id);
 
     const sql = "UPDATE User SET name = ?, email = ?, password = ?, city = ?, country = ? WHERE user_id = ?";
 

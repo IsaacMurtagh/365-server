@@ -30,5 +30,8 @@ exports.hashedPassword = function (password) {
 }
 
 exports.comparePasswords = function (clear_password, hashed_password) {
-    return bcrypt.compareSync(clear_password, hashed_password);
+    console.log(clear_password, hashed_password);
+    const result =  bcrypt.compareSync(clear_password, hashed_password);
+    console.log(result);
+    return result
 }

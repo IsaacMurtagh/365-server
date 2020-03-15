@@ -19,13 +19,13 @@ exports.getPeititons = async function (qp) {
             values.push(`%${qp.q}%`);
             needAnd = true;
         }
-        if (qp.categoryId != null && Number(qp.categoryId) != NaN) {
+        if (qp.categoryId != null) {
             if (needAnd) {where+= 'AND '};
             where += `Petition.category_id = ? `;
             values.push(Number(qp.categoryId));
             needAnd = true;
         }
-        if (qp.authorId != null && Number(qp.authorId) != NaN) {
+        if (qp.authorId != null) {
             if (needAnd) {where+= 'AND '};
             where += `Petition.author_id = ? `;
             values.push(parseInt(qp.authorId));
@@ -58,5 +58,16 @@ exports.getCategoryById = async function (id) {
     const [rows, fields] = await connection.query(query, [id]);
     await connection.release();
     return rows
+
+}
+
+exports.addPetition = async function (values) {
+    const connection = await db.getPool().getConnection();
+
+    const query = "INSERT INTO Petition (title, description, author_id, category_id, created_date, closing_date) " +
+        "VALUES (?, ?, ?, ?, ?, ?)";
+    const [rows, fields] = await connection.query(query, values);
+    await connection.release();
+    return rows;
 
 }

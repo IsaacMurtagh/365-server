@@ -56,15 +56,13 @@ exports.login = async function (req, res) {
         const user_results = await User.getUserByEmail(req.body.email);
         const user_profile = user_results[0];
 
-
         // Check that email exists
-        if (user_results.length !== 1) {
+        if (user_profile == null) {
             throw new SyntaxError();
         }
 
         // Check that the password is correct
         if (!Auth.comparePasswords(req.body.password, user_profile.password)) {
-            console.log('fails')
             throw new SyntaxError();
         }
 
@@ -157,6 +155,8 @@ exports.updateUser = async function (req, res) {
             if (!Auth.comparePasswords(req.body.currentPassword, user_profile.password)) {
                 errorReason = "Unauthorized";
                 throw new Error();
+            } else {
+                updated_details.password = Auth.hashedPassword(req.body.password);
             }
         }
 
