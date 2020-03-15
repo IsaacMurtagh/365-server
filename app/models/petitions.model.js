@@ -50,3 +50,13 @@ exports.getPeititons = async function (qp) {
     await connection.release();
     return rows;
 }
+
+exports.getCategoryById = async function (id) {
+    const connection = await db.getPool().getConnection();
+
+    const query = "SELECT * FROM Category WHERE category_id = ?";
+    const [rows, fields] = await connection.query(query, [id]);
+    await connection.release();
+    return rows
+
+}
