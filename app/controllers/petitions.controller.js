@@ -141,43 +141,61 @@ exports.updatePetitonById = async function (req, res) {
             throw new Error();
         }
 
-        // Syntax Checks
-        if (body.title == null || body.description == null ||
-            body.categoryId == null || isNaN(body.categoryId) ||
-            isNaN(Date.parse(body.closingDate))) {
-            errorReason = "Bad Request";
-            throw new Error();
-        }
-
         // Check petition exists
         const petition = (await Petition.getPetitionById(petitionId))[0];
-        if (results.length == null) {
+        console.log(petition)
+        if (petition == null) {
             errorReason = "Not Found";
             throw new Error();
         }
 
-        if ((await Petition.getCategoryById(body.categoryId)).length === 0) { // Category doesn't exist
-            errorReason = "Bad Request";
-            throw new Error();
-        }
-
-        if (Date.now() >= Date.parse(body.closingDate)) { // Closing Date is not in the future
-            errorReason = "Bad Request";
-            throw new Error();
-        }
-
         // Check user is author
-        if (user_profile.userId !== petition.author_id) {
+        if (user_profile.user_id !== petition.author_id) {
             errorReason = "Forbidden";
             throw new Error();
         }
 
+        let updatePetition = {
+            "title": petition.title,
+            "description": petition.description,
+            "categoryId": petition.category_id,
+            "closingDate": petition.closing_date
+        }
+
+        // Syntax Checks
+        if (body.title !=  null) {
+            updatePetition["title"] = body.title;
+        }
+
+        if (body.title !=  null) {
+            updatePetition["description"] = body.description;
+        }
+
+        if (body.categoryId != null && (await Petition.getCategoryById(body.categoryId)).length === 0) { // Category doesn't exist
+            errorReason = "Bad Request";
+            throw new Error();
+        } else if (body.categoryId != null) {
+            updatePetition["categoryId"] = body.categoryId;
+        }
+
+        if (body.closingDate != null && Date.now() >= Date.parse(body.closingDate)) { // Closing Date is not in the future
+            errorReason = "Bad Request";
+            throw new Error();
+        } else if (body.closingDate != null) {
+            updatePetition["closingDate"] = body.categoryId;
+        }
+
         // Update petition
-        const values = [body.title, body.description, body.categoryId, body.closingDate, petitionId];
+        let values = []
+        for (const [key, value] of Object.entries(updatePetition)) {
+            values.push(value);
+        }
+        values.push(petitionId);
+
         await Petition.updatePetitionById(values);
 
         res.statusMessage = "OK";
-        res.status(200).send(results[0]);
+        res.status(200).send();
     } catch (e) {
         if (errorReason === "Bad Request") {
             res.statusMessage = errorReason;

@@ -9,7 +9,7 @@ exports.createPool = async function () {
         user: process.env.SENG365_MYSQL_USER,
         password: process.env.SENG365_MYSQL_PASSWORD,
         database: process.env.SENG365_MYSQL_DATABASE,
-        port: process.env.SENG365_MYSQL_PORT || 3306 //Change to 3306 when in lab, 9991 when home
+        port: process.env.SENG365_MYSQL_PORT || 3307 //Change to 3306 when in lab, 3307 when home
     });
 };
 

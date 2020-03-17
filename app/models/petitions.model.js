@@ -4,10 +4,11 @@ exports.getPeititons = async function (qp) {
     const connection = await db.getPool().getConnection();
     let values = [];
 
-    let query = "SELECT petition_id AS petitionId, title, Category.name AS category, User.name AS authorName, COUNT(petition_id) AS signatureCount " +
-        "FROM Petition NATURAL JOIN Signature " +
-        "JOIN User on Petition.author_id = User.user_id " +
-        "JOIN Category on Category.category_id = Petition.category_id ";
+    let query = "SELECT P.petition_id AS petitionId, title, C.name AS category, U.name AS authorName, " +
+        "COUNT(S.signatory_id) AS signatureCount " +
+        "FROM Petition P LEFT JOIN Signature S ON P.petition_id = S.petition_id " +
+        "JOIN User U on P.author_id = U.user_id " +
+        "JOIN Category C on C.category_id = P.category_id ";
 
     let where = "";
     if (qp.q != null || qp.categoryId != null || qp.authorId != null) {
@@ -21,18 +22,18 @@ exports.getPeititons = async function (qp) {
         }
         if (qp.categoryId != null) {
             if (needAnd) {where+= 'AND '};
-            where += `Petition.category_id = ? `;
+            where += `P.category_id = ? `;
             values.push(Number(qp.categoryId));
             needAnd = true;
         }
         if (qp.authorId != null) {
             if (needAnd) {where+= 'AND '};
-            where += `Petition.author_id = ? `;
+            where += `P.author_id = ? `;
             values.push(parseInt(qp.authorId));
         }
     }
     query += where;
-    query += "GROUP BY Petition.petition_id ";
+    query += "GROUP BY P.petition_id ";
 
     let sortBy = "";
     if (qp.sortBy == "ALPHABETICAL_ASC") {
@@ -80,8 +81,8 @@ exports.getDetailedPetitionById = async function (id) {
     const query = "SELECT P.petition_id AS petitionId, P.title AS title, C.name AS category, U.name AS authorName, " +
         "COUNT(S.signatory_id) AS signatureCount, P.description as description, U.user_id AS authorId, " +
         "U.city AS authorCity, U.country AS authorCountry, P.created_date AS createdDate, P.closing_date AS closingDate " +
-        "FROM Petition P JOIN User U ON P.author_id = U.user_id JOIN Category C ON P.category_id = C.category_id JOIN " +
-        "Signature S ON P.petition_id = S.petition_id WHERE P.petition_id = ? GROUP BY P.petition_id"
+        "FROM Petition P JOIN User U ON P.author_id = U.user_id JOIN Category C ON P.category_id = C.category_id " +
+        "LEFT JOIN Signature S ON P.petition_id = S.petition_id WHERE P.petition_id = ? GROUP BY P.petition_id"
 
     console.log(query)
 
@@ -110,7 +111,6 @@ exports.updatePetitionById = async function (values) {
 
     console.log(query)
 
-    const [rows, fields] = await connection.query(query, values);
+    await connection.query(query, values);
     await connection.release();
-    return rows;
 }
