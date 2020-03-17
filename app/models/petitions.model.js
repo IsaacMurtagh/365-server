@@ -7,7 +7,7 @@ exports.getPeititons = async function (qp) {
     let query = "SELECT petition_id AS petitionId, title, Category.name AS category, User.name AS authorName, COUNT(petition_id) AS signatureCount " +
         "FROM Petition NATURAL JOIN Signature " +
         "JOIN User on Petition.author_id = User.user_id " +
-        "JOIN Category on Category.category_id = Petition.petition_id ";
+        "JOIN Category on Category.category_id = Petition.category_id ";
 
     let where = "";
     if (qp.q != null || qp.categoryId != null || qp.authorId != null) {
@@ -32,7 +32,7 @@ exports.getPeititons = async function (qp) {
         }
     }
     query += where;
-    query += "GROUP BY petition_id ";
+    query += "GROUP BY Petition.petition_id ";
 
     let sortBy = "";
     if (qp.sortBy == "ALPHABETICAL_ASC") {
@@ -45,6 +45,8 @@ exports.getPeititons = async function (qp) {
         sortBy = "ORDER BY signatureCount DESC";
     }
     query += sortBy;
+
+    console.log(query)
 
     const [rows, fields] = await connection.query(query, values);
     await connection.release();
@@ -70,4 +72,45 @@ exports.addPetition = async function (values) {
     await connection.release();
     return rows;
 
+}
+
+exports.getDetailedPetitionById = async function (id) {
+    const connection = await db.getPool().getConnection();
+
+    const query = "SELECT P.petition_id AS petitionId, P.title AS title, C.name AS category, U.name AS authorName, " +
+        "COUNT(S.signatory_id) AS signatureCount, P.description as description, U.user_id AS authorId, " +
+        "U.city AS authorCity, U.country AS authorCountry, P.created_date AS createdDate, P.closing_date AS closingDate " +
+        "FROM Petition P JOIN User U ON P.author_id = U.user_id JOIN Category C ON P.category_id = C.category_id JOIN " +
+        "Signature S ON P.petition_id = S.petition_id WHERE P.petition_id = ? GROUP BY P.petition_id"
+
+    console.log(query)
+
+    const [rows, fields] = await connection.query(query, [id]);
+    await connection.release();
+    return rows;
+}
+
+exports.getPetitionById = async function (id) {
+    const connection = await db.getPool().getConnection();
+
+    const query = "SELECT * FROM Petition WHERE petition_id = ?";
+
+    console.log(query)
+
+    const [rows, fields] = await connection.query(query, [id]);
+    await connection.release();
+    return rows;
+}
+
+exports.updatePetitionById = async function (values) {
+    const connection = await db.getPool().getConnection();
+
+    const query = "UPDATE Petition SET title = ?, description = ?, category_id = ?, " +
+        "closing_date = ? WHERE petition_id = ?";
+
+    console.log(query)
+
+    const [rows, fields] = await connection.query(query, values);
+    await connection.release();
+    return rows;
 }
