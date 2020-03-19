@@ -194,13 +194,13 @@ exports.updateUser = async function (req, res) {
         res.statusMessage = "OK";
         res.status(200).send();
     } catch (err) {
-        if (errorReason == "Unauthorized") {
+        if (errorReason === "Unauthorized") {
             res.statusMessage = errorReason;
             res.status(401).send();
-        } else if (errorReason == "Bad Request") {
+        } else if (errorReason === "Bad Request") {
             res.statusMessage = errorReason;
             res.status(400).send();
-        } else if (errorReason == "Forbidden") {
+        } else if (errorReason === "Forbidden") {
             res.statusMessage = errorReason;
             res.status(403).send();
         } else {

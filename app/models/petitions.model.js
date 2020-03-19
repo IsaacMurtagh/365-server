@@ -47,22 +47,11 @@ exports.getPeititons = async function (qp) {
     }
     query += sortBy;
 
-    console.log(query)
-
     const [rows, fields] = await connection.query(query, values);
     await connection.release();
     return rows;
 }
 
-exports.getCategoryById = async function (id) {
-    const connection = await db.getPool().getConnection();
-
-    const query = "SELECT * FROM Category WHERE category_id = ?";
-    const [rows, fields] = await connection.query(query, [id]);
-    await connection.release();
-    return rows
-
-}
 
 exports.addPetition = async function (values) {
     const connection = await db.getPool().getConnection();
@@ -75,6 +64,7 @@ exports.addPetition = async function (values) {
 
 }
 
+
 exports.getDetailedPetitionById = async function (id) {
     const connection = await db.getPool().getConnection();
 
@@ -84,24 +74,22 @@ exports.getDetailedPetitionById = async function (id) {
         "FROM Petition P JOIN User U ON P.author_id = U.user_id JOIN Category C ON P.category_id = C.category_id " +
         "LEFT JOIN Signature S ON P.petition_id = S.petition_id WHERE P.petition_id = ? GROUP BY P.petition_id"
 
-    console.log(query)
-
     const [rows, fields] = await connection.query(query, [id]);
     await connection.release();
     return rows;
 }
+
 
 exports.getPetitionById = async function (id) {
     const connection = await db.getPool().getConnection();
 
     const query = "SELECT * FROM Petition WHERE petition_id = ?";
 
-    console.log(query)
-
     const [rows, fields] = await connection.query(query, [id]);
     await connection.release();
     return rows;
 }
+
 
 exports.updatePetitionById = async function (values) {
     const connection = await db.getPool().getConnection();
@@ -109,8 +97,38 @@ exports.updatePetitionById = async function (values) {
     const query = "UPDATE Petition SET title = ?, description = ?, category_id = ?, " +
         "closing_date = ? WHERE petition_id = ?";
 
-    console.log(query)
-
     await connection.query(query, values);
     await connection.release();
+}
+
+
+exports.deletePetitionById = async function (id) {
+    const connection = await db.getPool().getConnection();
+
+    const query = "DELETE FROM Petition WHERE petition_id = ?";
+
+    await connection.query(query, [id]);
+    await connection.release();
+}
+
+
+exports.getCategoryById = async function (id) {
+    const connection = await db.getPool().getConnection();
+
+    const query = "SELECT * FROM Category WHERE category_id = ?";
+    const [rows, fields] = await connection.query(query, [id]);
+    await connection.release();
+    return rows
+
+}
+
+
+exports.getAllCategories = async function () {
+    const connection = await db.getPool().getConnection();
+
+    const query = "SELECT category_id AS categoryId, name FROM Category";
+
+    const [rows, fields] = await connection.query(query);
+    await connection.release();
+    return rows;
 }

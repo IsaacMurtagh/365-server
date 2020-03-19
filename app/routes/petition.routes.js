@@ -5,7 +5,11 @@ module.exports = function (app) {
         .get(petitions.getPetitions)
         .post(petitions.addPetition);
 
+    app.route(app.rootUrl + '/petitions/categories')
+        .get(petitions.getCategories);
+
     app.route(app.rootUrl + '/petitions/:id')
         .get(petitions.getPetitionById)
         .patch(petitions.updatePetitonById)
+        .delete(petitions.deletePetitonById);
 }

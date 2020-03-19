@@ -132,7 +132,7 @@ exports.updatePetitonById = async function (req, res) {
     var errorReason = "";
     try {
         const petitionId = req.params.id;
-        const body = req.body
+        const body = req.body;
 
         // If not logged in
         let user_profile = await Auth.authenticateUser(req.header('X-Authorization'));
@@ -143,7 +143,6 @@ exports.updatePetitonById = async function (req, res) {
 
         // Check petition exists
         const petition = (await Petition.getPetitionById(petitionId))[0];
-        console.log(petition)
         if (petition == null) {
             errorReason = "Not Found";
             throw new Error();
@@ -216,3 +215,65 @@ exports.updatePetitonById = async function (req, res) {
         }
     }
 }
+
+
+exports.deletePetitonById = async function (req, res) {
+    var errorReason = "";
+    try {
+        const petitionId = req.params.id;
+
+        // If not logged in
+        let user_profile = await Auth.authenticateUser(req.header('X-Authorization'));
+        if (user_profile == null) { // Not logged in
+            errorReason = "Unauthorized";
+            throw new Error();
+        }
+
+        // Check petition exists
+        const petition = (await Petition.getPetitionById(petitionId))[0];
+        if (petition == null) {
+            errorReason = "Not Found";
+            throw new Error();
+        }
+
+        // Check user is author
+        if (user_profile.user_id !== petition.author_id) {
+            errorReason = "Forbidden";
+            throw new Error();
+        }
+
+        Petition.deletePetitionById(petitionId);
+
+        res.statusMessage = "OK";
+        res.status(200).send();
+    } catch (e) {
+        if (errorReason === "Unauthorized") {
+            res.statusMessage = errorReason;
+            res.status(401).send();
+        } else if (errorReason === "Forbidden") {
+            res.statusMessage = errorReason;
+            res.status(403).send();
+        } else if (errorReason === "Not Found") {
+            res.statusMessage = errorReason;
+            res.status(404).send();
+        } else {
+            console.log(e);
+            res.statusMessage = "Internal Server Error";
+            res.status(500).send();
+        }
+    }
+}
+
+exports.getCategories = async function (req, res) {
+    try {
+        const results = await Petition.getAllCategories();
+        res.statusMessage = "OK";
+        res.status(200).send(results);
+    } catch (e) {
+        console.log(e);
+        res.statusMessage = "Internal Server Error";
+        res.status(500).send();
+    }
+}
+
+
