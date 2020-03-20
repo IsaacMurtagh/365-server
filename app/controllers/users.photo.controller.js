@@ -1,12 +1,13 @@
 const User = require('../models/user.model');
 const Photo = require('../models/user.photo.model');
+const Auth = require('./helpers/authenticate');
 const fs = require('mz/fs');
 const mime = require('mime-types');
+const Jimp = require('jimp');
 
 exports.getPhotoByUserId = async function (req, res) {
     let errorReason = "";
     try {
-        const userId = req.params.id;
 
         let photo_filename = (await Photo.getPhotoById(userId))[0];
         if (!photo_filename) {
@@ -43,7 +44,9 @@ exports.getPhotoByUserId = async function (req, res) {
 exports.addProfileToUser = async function (req, res) {
     let errorReason = "";
     try {
-        // Auth
+        let image = req.body;
+        console.log(image);
+
         let user_profile = await Auth.authenticateUser(req.header('X-Authorization'));
         if (user_profile == null) {
             errorReason = "Unauthorized";
@@ -57,13 +60,13 @@ exports.addProfileToUser = async function (req, res) {
             throw new Error();
         }
 
-        // User requested is same as user
+        // User requested is same as usermimetype get mimstream
         if  (user_profile.user_id !== req.params.id) { // Not own profile
             errorReason = "Forbidden";
             throw new Error();
         }
+        // read image
 
-        // Check that extensions are expected
 
         res.statusMessage = "OK";
         res.status(201).send();

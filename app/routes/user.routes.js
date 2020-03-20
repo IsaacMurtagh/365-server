@@ -1,6 +1,5 @@
 const users = require('../controllers/users.controller');
 const userPhotos = require('../controllers/users.photo.controller');
-const Auth = require('../middleware/Auth');
 
 module.exports = function (app) {
     app.route(app.rootUrl + '/users/register')
