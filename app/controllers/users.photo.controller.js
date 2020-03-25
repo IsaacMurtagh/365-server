@@ -3,18 +3,24 @@ const Photo = require('../models/user.photo.model');
 const Auth = require('./helpers/authenticate');
 const fs = require('mz/fs');
 const mime = require('mime-types');
+const bt = require('buffer-type');
 const Jimp = require('jimp');
 
 exports.getPhotoByUserId = async function (req, res) {
     let errorReason = "";
     try {
-
-        let photo_filename = (await Photo.getPhotoById(userId))[0];
-        if (!photo_filename) {
+        userId = req.params.id;
+        let user = (await Photo.getPhotoById(userId))[0];
+        if (!user) { // user with ID does not exist
             errorReason = "Not Found";
             throw new Error();
         }
-        photo_filename = photo_filename.photo_filename;
+        photo_filename = user.photo_filename;
+        if (!photo_filename) { // User does not have a profile set
+            errorReason = "Not Found";
+            throw new Error();
+        }
+
         const photoDirectory = "storage/photos/";
 
         let image;
@@ -44,8 +50,8 @@ exports.getPhotoByUserId = async function (req, res) {
 exports.addProfileToUser = async function (req, res) {
     let errorReason = "";
     try {
-        let image = req.body;
-        console.log(image);
+        let image_buffer = req.body;
+        const photoDirectory = "storage/photos/";
 
         let user_profile = await Auth.authenticateUser(req.header('X-Authorization'));
         if (user_profile == null) {
@@ -54,22 +60,47 @@ exports.addProfileToUser = async function (req, res) {
         }
 
         // User exists by param
-        const editing_profile = await User.getUserById(req.params.id);
+        const editing_profile = (await User.getUserById(req.params.id))[0];
         if (!editing_profile) {
             errorReason = "Not Found";
             throw new Error();
         }
 
-        // User requested is same as usermimetype get mimstream
-        if  (user_profile.user_id !== req.params.id) { // Not own profile
+        // User requested is same as logged in user
+        if  (user_profile.user_id !== editing_profile.user_id) { // Not own profile
             errorReason = "Forbidden";
             throw new Error();
         }
         // read image
+        const img_mime = bt(image_buffer).type;
+        const image_name = "user_" + user_profile.user_id;
 
+        if (!(img_mime == Jimp.MIME_PNG || img_mime == Jimp.MIME_JPEG || img_mime == Jimp.MIME_GIF)) {
+            errorReason = "Bad Request";
+            throw new Error();
+        }
 
-        res.statusMessage = "OK";
-        res.status(201).send();
+        const image_full = await Jimp.read(image_buffer)
+            .then(image => {
+                let image_full = image_name + "." + image.getExtension();
+                image.write(photoDirectory + image_full);
+                return image_full
+            })
+            .catch(() => {
+                errorReason = "Bad Request";
+                throw new Error();
+            });
+
+        // Update user db based on image name
+        await Photo.addPhotoById(user_profile.user_id, image_full);
+
+        if (user_profile.photo_filename) {
+            res.statusMessage = "OK";
+            res.status(200).send();
+        } else {
+            res.statusMessage = "Created";
+            res.status(201).send();
+        }
     } catch (err) {
         if (errorReason === "Unauthorized") {
             res.statusMessage = errorReason;
