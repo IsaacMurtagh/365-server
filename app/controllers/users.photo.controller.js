@@ -71,8 +71,15 @@ exports.addProfileToUser = async function (req, res) {
             errorReason = "Forbidden";
             throw new Error();
         }
+
+        var img_mime;
         // read image
-        const img_mime = bt(image_buffer).type;
+        try {
+            img_mime = bt(image_buffer).type;
+        } catch (e) {
+            errorReason = "Bad Request";
+            throw new Error();
+        }
         const image_name = "user_" + user_profile.user_id;
 
         if (!(img_mime == Jimp.MIME_PNG || img_mime == Jimp.MIME_JPEG || img_mime == Jimp.MIME_GIF)) {
