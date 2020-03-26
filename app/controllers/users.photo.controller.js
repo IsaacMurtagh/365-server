@@ -3,7 +3,6 @@ const Photo = require('../models/user.photo.model');
 const Auth = require('./helpers/authenticate');
 const fs = require('mz/fs');
 const mime = require('mime-types');
-const bt = require('buffer-type');
 const Jimp = require('jimp');
 
 exports.getPhotoByUserId = async function (req, res) {
@@ -52,6 +51,7 @@ exports.addProfileToUser = async function (req, res) {
     try {
         let image_buffer = req.body;
         const photoDirectory = "storage/photos/";
+        const img_mime = req.headers['content-type'];
 
         let user_profile = await Auth.authenticateUser(req.header('X-Authorization'));
         if (user_profile == null) {
@@ -72,16 +72,9 @@ exports.addProfileToUser = async function (req, res) {
             throw new Error();
         }
 
-        var img_mime;
-        // read image
-        try {
-            img_mime = bt(image_buffer).type;
-        } catch (e) {
-            errorReason = "Bad Request";
-            throw new Error();
-        }
         const image_name = "user_" + user_profile.user_id;
 
+        // image mime is of expected type
         if (!(img_mime == Jimp.MIME_PNG || img_mime == Jimp.MIME_JPEG || img_mime == Jimp.MIME_GIF)) {
             errorReason = "Bad Request";
             throw new Error();
