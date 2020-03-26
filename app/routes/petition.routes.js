@@ -1,4 +1,5 @@
 const petitions = require('../controllers/petitions.controller');
+const photos = require('../controllers/petitions.photo.controller');
 
 module.exports = function (app) {
     app.route(app.rootUrl + '/petitions')
@@ -12,4 +13,8 @@ module.exports = function (app) {
         .get(petitions.getPetitionById)
         .patch(petitions.updatePetitonById)
         .delete(petitions.deletePetitonById);
+
+    app.route(app.rootUrl + '/petitions/:id/photo')
+        .get(photos.getPhotoById)
+        .put(photos.addPhotoToPetition);
 }
