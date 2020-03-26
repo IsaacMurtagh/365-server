@@ -19,4 +19,5 @@ module.exports = function (app) {
     app.route(app.rootUrl + '/users/:id/photo')
         .get(userPhotos.getPhotoByUserId)
         .put(userPhotos.addProfileToUser)
+        .delete(userPhotos.deleteProfileFromUser)
 }

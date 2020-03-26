@@ -9,13 +9,8 @@ exports.getPhotoByUserId = async function (req, res) {
     let errorReason = "";
     try {
         userId = req.params.id;
-        let user = (await Photo.getPhotoById(userId))[0];
-        if (!user) { // user with ID does not exist
-            errorReason = "Not Found";
-            throw new Error();
-        }
-        photo_filename = user.photo_filename;
-        if (!photo_filename) { // User does not have a profile set
+        let photo_filename = (await Photo.getPhotoById(userId))[0].photo_filename;
+        if (!photo_filename) { // User has no photo
             errorReason = "Not Found";
             throw new Error();
         }
@@ -108,6 +103,60 @@ exports.addProfileToUser = async function (req, res) {
         } else if (errorReason === "Bad Request") {
             res.statusMessage = errorReason;
             res.status(400).send();
+        } else if (errorReason === "Forbidden") {
+            res.statusMessage = errorReason;
+            res.status(403).send();
+        } else {
+            console.log(err);
+            res.statusMessage = "Internal Server Error";
+            res.status(500).send();
+        }
+
+    }
+};
+
+exports.deleteProfileFromUser = async function (req, res) {
+    let errorReason = "";
+    try {
+        const photoDirectory = "storage/photos/";
+        const userId = req.params.id;
+
+        let user_profile = await Auth.authenticateUser(req.header('X-Authorization'));
+        if (user_profile == null) {
+            errorReason = "Unauthorized";
+            throw new Error();
+        }
+
+        // User exists by param
+        const editing_profile = (await User.getUserById(userId))[0];
+        if (!editing_profile) {
+            errorReason = "Not Found";
+            throw new Error();
+        }
+
+        // User requested is same as logged in user
+        if  (user_profile.user_id !== editing_profile.user_id) { // Not own profile
+            errorReason = "Forbidden";
+            throw new Error();
+        }
+
+        const photoFilename = user_profile.photo_filename;
+        if (!photoFilename) { // User does not have a profile
+            errorReason = "Not Found";
+            throw new Error();
+        }
+
+        await Photo.deletePhotoById(userId);
+
+        res.statusMessage = "OK";
+        res.status(200).send();
+    } catch (err) {
+        if (errorReason === "Unauthorized") {
+            res.statusMessage = errorReason;
+            res.status(401).send();
+        } else if (errorReason === "Not Found") {
+            res.statusMessage = errorReason;
+            res.status(404).send();
         } else if (errorReason === "Forbidden") {
             res.statusMessage = errorReason;
             res.status(403).send();

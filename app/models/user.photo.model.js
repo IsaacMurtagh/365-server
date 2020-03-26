@@ -17,3 +17,11 @@ exports.addPhotoById = async function (id, photoName) {
     await connection.query(query, [photoName, id]);
     await connection.release();
 };
+
+exports.deletePhotoById = async function (id) {
+    const connection = await db.getPool().getConnection();
+
+    const query = "UPDATE User SET photo_filename = null WHERE user_id = ?";
+    await connection.query(query, [id]);
+    await connection.release();
+};

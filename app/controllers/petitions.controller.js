@@ -6,7 +6,6 @@ exports.getPetitions = async function (req, res) {
     var errorReason = "";
     try {
         const q = req.query;
-        console.log(q);
         // Syntax checks
         if (q.categoryId != null && isNaN(Number(q.categoryId))) { // Invalid Category ID syntax
             errorReason = 'Bad Request';
