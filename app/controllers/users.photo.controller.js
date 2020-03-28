@@ -23,7 +23,7 @@ exports.getPhotoByUserId = async function (req, res) {
         let mimeType;
         if( await fs.exists(photoDirectory + photo_filename)) {
             image = await fs.readFile(photoDirectory + photo_filename);
-            mimeType = mime.lookup(photo_filename);
+            mimeType = mime.lookup(photoDirectory + photo_filename);
         } else {
             errorReason = "Not Found";
             throw new Error();

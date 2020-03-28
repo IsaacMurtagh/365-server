@@ -57,7 +57,7 @@ exports.addPhotoToPetition = async function (req, res) {
             throw new Error();
         }
 
-        // User exists by param
+        // petition exists
         const petition = (await Petition.getPetitionById(petitionId))[0];
         if (!petition) {
             errorReason = "Not Found";
@@ -103,6 +103,9 @@ exports.addPhotoToPetition = async function (req, res) {
         if (errorReason === "Unauthorized") {
             res.statusMessage = errorReason;
             res.status(401).send();
+        } else if (errorReason === "Not Found") {
+            res.statusMessage = errorReason;
+            res.status(404).send();
         } else if (errorReason === "Bad Request") {
             res.statusMessage = errorReason;
             res.status(400).send();
