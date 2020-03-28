@@ -77,20 +77,17 @@ exports.addPhotoToPetition = async function (req, res) {
             throw new Error();
         }
 
-        const image_full = await Jimp.read(image_buffer)
-            .then(image => {
-                let image_full = image_name + "." + image.getExtension();
-                image.write(photoDirectory + image_full);
-                return image_full
-            })
-            .catch((err) => {
-                console.log(err)
+        const imageFull = image_name + "." + mime.extension(img_mime);
+        fs.writeFile(photoDirectory + imageFull, image_buffer, (err) => {
+            if (err) {
+                console.log(err);
                 errorReason = "Bad Request";
                 throw new Error();
-            });
+            }
+        });
 
         // Update user db based on image name
-        await Photo.addPhotoById(petition.petition_id, image_full);
+        await Photo.addPhotoById(petition.petition_id, imageFull);
 
         if (petition.photo_filename) {
             res.statusMessage = "OK";
