@@ -93,7 +93,7 @@ exports.removeSigantureById = async function (req, res) {
             throw new Error();
         }
 
-        let petition = await Petition.getPetitionById(petitionId);
+        let petition = (await Petition.getPetitionById(petitionId))[0];
         if (!petition) {
             errorReason = "Not Found";
             throw new Error();

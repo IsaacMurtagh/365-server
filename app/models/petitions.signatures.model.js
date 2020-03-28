@@ -4,7 +4,7 @@ exports.getSignaturesForPetition = async function (id) {
     const connection = await db.getPool().getConnection();
 
     const query = "SELECT S.signatory_id AS signatoryId, U.name, U.city, U.country, S.signed_date AS signedDate " +
-        "FROM Petition P NATURAL JOIN Signature S JOIN User U ON P.author_id = U.user_id " +
+        "FROM Petition P NATURAL JOIN Signature S JOIN User U ON S.signatory_id = U.user_id " +
         "WHERE P.petition_id = ? ORDER BY S.signed_date";
 
     const [rows, fields] = await connection.query(query, [id]);
