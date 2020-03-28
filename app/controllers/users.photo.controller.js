@@ -78,13 +78,12 @@ exports.addPhotoToUser = async function (req, res) {
         }
 
         const imageFull = image_name + "." + mime.extension(img_mime);
-        fs.writeFile(photoDirectory + imageFull, image_buffer, (err) => {
-            if (err) {
-                console.log(err);
-                errorReason = "Bad Request";
-                throw new Error();
-            }
-        });
+        try {
+            fs.writeFile(photoDirectory + imageFull, image_buffer);
+        } catch (e) {
+            errorReason = "Bad Request";
+            throw new Error();
+        }
 
         // Update user db based on image name
         await Photo.addPhotoById(user_profile.user_id, imageFull);

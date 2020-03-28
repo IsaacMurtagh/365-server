@@ -1,5 +1,6 @@
 const petitions = require('../controllers/petitions.controller');
 const photos = require('../controllers/petitions.photo.controller');
+const signatures = require('../controllers/petitions.singatures.controller');
 
 module.exports = function (app) {
     app.route(app.rootUrl + '/petitions')
@@ -17,4 +18,9 @@ module.exports = function (app) {
     app.route(app.rootUrl + '/petitions/:id/photo')
         .get(photos.getPhotoById)
         .put(photos.addPhotoToPetition);
+
+    app.route(app.rootUrl + '/petitions/:id/signatures')
+        .get(signatures.getSignaturesByPetition)
+        .post(signatures.signPetition)
+        .delete(signatures.removeSigantureById);
 }
