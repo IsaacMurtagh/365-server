@@ -24,6 +24,11 @@ exports.createUser = async function (req, res) {
             throw new SyntaxError();
         }
 
+        // Check name not empty
+        if (req.body.name.length < 1) {
+            throw new SyntaxError();
+        }
+
         const values = [
             req.body.name,
             req.body.email,
